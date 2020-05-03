@@ -1,0 +1,5 @@
+# Ignore results from testing the algorithms
+*.txt
+
+# Ignore the Python cache
+__pycache__/
