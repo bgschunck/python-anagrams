@@ -4,5 +4,6 @@
 # Ignore the Python cache
 __pycache__/
 
-# Ignore the table of anagrams
+# Ignore saved tables of anagrams
 *.yaml
+*.json
