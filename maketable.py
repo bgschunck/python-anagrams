@@ -11,8 +11,11 @@ import os
 class AnagramTable():
     """Table of anagrams supporting fast lookup to quickly determine whether a word is an anagram."""
 
-    def __init__(self):
-        self.anagram_dict = {}
+    def __init__(self, pathname=None):
+        if pathname:
+            self.anagram_dict = AnagramTable.load_anagram_table(pathname)
+        else:
+            self.anagram_dict = {}
 
     @staticmethod
     def canonical(string):
@@ -71,26 +74,39 @@ class AnagramTable():
             else:
                 exit("Unknown filetype: %s" % filetype)
 
-    def load_anagram_table(self, pathname):
+    @staticmethod
+    def load_anagram_table(pathname):
         """Load the anagram table from the specified file."""
 
         filetype = os.path.splitext(pathname)[1][1:].lower()
 
         with open(pathname) as input:
             if filetype == 'yaml':
-                self.anagram_dict = yaml.load(input, Loader=yaml.FullLoader)
+                return yaml.load(input, Loader=yaml.FullLoader)
             elif filetype == 'json':
-                self.anagram_dict = json.load(input)
+                return json.load(input)
             else:
                 exit("Unknown filetype: %s" % filetype)
 
+    def is_anagram(self, word):
+        return self.anagram_key(word) in self.anagram_dict
+
+
 if __name__ == "__main__":
+
+    from argparse import ArgumentParser
+    
+    parser = ArgumentParser('Make a fast table for determing whether a word is an anagram')
+    parser.add_argument('-o', '--output', default='anagram.json', help='output pathname (either JSON or YAML format)')
+    
+    args = parser.parse_args()
 
     # Create an anagram table
     anagram_table = AnagramTable()
 
-    # Make the anagram table with no limit in the number of entries
+    # Make the anagram table with no limit on the number of entries
     anagram_table.make_anagram_table()
 
     # Save the anagram table
-    anagram_table.save_anagram_table("anagram.json")
+    anagram_table.save_anagram_table(args.output)
+

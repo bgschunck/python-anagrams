@@ -4,6 +4,7 @@ from itertools import permutations
 #from nltk.corpus import wordnet
 from nltk.corpus import words
 import random
+from maketable import AnagramTable
 
 
 # debug_count = 10
@@ -25,8 +26,22 @@ def indentation(level):
     
 
 def lookup(word):
-    """Return true of the word is in the dictionary."""
-    return word in words.words()
+    """Return true if the word is in the dictionary.
+    
+    The anagram table contains all words in the dictionary, indexed by anagram key.
+    If there is an entry in the anagram table for the anagram of the specified word,
+    then the word is present in the dictionary. Usig the anagram table appears to be
+    faster than looking up the word in the dictionary used to create the anagram table.
+    """
+    #return word in words.words()
+    return anagram_table.is_anagram(word)
+    
+
+def randomize_string(string):
+    """Return a random permutation of the input string."""
+    characters = list(string)
+    random.shuffle(characters)
+    return stringify(characters)
     
 
 def prefix_algorithm(phrase, verbose=False, debug=False, level=0):
@@ -34,7 +49,7 @@ def prefix_algorithm(phrase, verbose=False, debug=False, level=0):
     The verbose and debug flags control output. The level is the depth of the recusrion.
     """
     
-    if verbose: print("%sphrase: %s" % (indentation(level), phrase))
+    if verbose: print("%sprefix(phrase: %s)" % (indentation(level), phrase))
     
     # Initialize the list for collecting the anagrams found at this level in the recursion
     anagram_result_list = []
@@ -74,7 +89,7 @@ def prefix_algorithm(phrase, verbose=False, debug=False, level=0):
                 # Add this word to the list of words already processed
                 prefix_word_list.append(word)
                 
-    #if debug: print(anagram_result_list)
+    if verbose: print("%sprefix(phrase %s) -> %s" % (indentation(level), phrase, anagram_result_list))
     
     return anagram_result_list
 
@@ -119,8 +134,6 @@ def single_word_anagram(phrase, verbose=False, debug=False):
             if debug: print("Skipped word: %s" % word)
             continue
             
-       
-            
         if lookup(word):
             if debug: print("Add new word: %s" % word)
             anagram_list.append(word)
@@ -136,21 +149,26 @@ if __name__ == "__main__":
 
     parser = ArgumentParser('Compute anagrams of phrase entered on the command line')
     parser.add_argument('phrase', nargs='+', help='phrase to check for anagrams (words separated by spaces')
+    parser.add_argument('-t', '--table', default='anagram.json', help='table of anagrams')
     parser.add_argument('-w', '--word', action='store_true', help='each anagram is a single word')
     parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose output')
     parser.add_argument('-e', '--debug', action='store_true', help='enable debugging output')
     args = parser.parse_args()
     
+    anagram_table = AnagramTable(args.table)
+    
     phrase = stringify(args.phrase).lower()
-    if args.verbose: print("Entire phrase: %s" % phrase)
+    if args.verbose: print("Original phrase: %s" % phrase)
     
     # Randomize the original phrase (the anagram does not likely start with a prefix of the original phrase)
-    phrase = stringify(random.shuffle(list(phrase)))
-    if debug: print("Shuffled phrase: %s" % phrase)
+    phrase = randomize_string(phrase)
+    if args.debug: print("Shuffled phrase: %s" % phrase)
     
     if args.word:
+        # Use a simpler algorithm to find all anagrams of one word
         anagram_list = single_word_anagram(phrase, args.verbose, args.debug)
     else:
+        # Find all anagrams of a phrase
         anagram_list = prefix_algorithm(phrase, args.verbose, args.debug)
 
     print("Anagrams: %s" % anagram_list)
