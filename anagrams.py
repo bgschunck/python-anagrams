@@ -8,34 +8,36 @@ import random
 
 # debug_count = 10
 
+# Set of words that have been checked and are not anagrams
+not_anagram_word_set = set()
+
 
 def stringify(list):
     """Convert list of characters into a string."""
     return ''.join(list)
 
 
+def indentation(level):
+    """Return a string that indents output according to the recursion level."""
+    #two_spaces = ' ' * 2
+    two_periods = '.' * 2
+    return two_periods * level
+    
+
 def lookup(word):
     """Return true of the word is in the dictionary."""
     return word in words.words()
     
 
-def prefix_algorithm(phrase, verbose=False, debug=False):
-    """Brute force algorithm that finds a prefix of the phrase in the dictionary."""
+def prefix_algorithm(phrase, verbose=False, debug=False, level=0):
+    """Brute force algorithm that finds a prefix of the phrase in the dictionary.
+    The verbose and debug flags control output. The level is the depth of the recusrion.
+    """
     
-    if verbose: print("Phrase: %s" % phrase)
-
-    # Terminate the recursion and return the anagram phrase?
-    #if len(phrase) == 0: return [' '.join(word_list)]
+    if verbose: print("%sphrase: %s" % (indentation(level), phrase))
     
     # Initialize the list for collecting the anagrams found at this level in the recursion
     anagram_result_list = []
-    
-    # Randomize the original phrase (the anagram does not likely start with a prefix of the original phrase)
-    # if len(word_list) == 0:
-        # phrase_list = list(phrase)
-        # random.shuffle(phrase_list)
-        # phrase = ''.join(phrase_list)
-        # if debug: print("Shuffled: %s" % phrase)
     
     # Initialize the list of prefix words for this level in the recursion
     prefix_word_list = []
@@ -44,8 +46,8 @@ def prefix_algorithm(phrase, verbose=False, debug=False):
     for p in permutations(phrase):
         
         # Convert the list of permuted letters into a string
-        string = ''.join(p)
-        if debug: print("Prefix: %s" % string)
+        string = stringify(p)
+        if debug: print("%sprefix string: %s" % (indentation(level), string))
         
         # global debug_count
         # if debug_count == 0: return
@@ -56,14 +58,14 @@ def prefix_algorithm(phrase, verbose=False, debug=False):
             # Split the string into two words
             (word, remainder) = (stringify(string[:length+1]), stringify(string[length+1:]))
             
-            if debug: print("Word: %s, remainder: %s" % (word, remainder))
+            if debug: print("%s(word: %s, remainder: %s)" % (indentation(level), word, remainder))
             
             # Found this word already?
             if not word in prefix_word_list:
                 # Find anagram phrases (one or more words) in the remainder
-                partial_anagram_list = suffix_algorithm(word, remainder, verbose, debug)
+                partial_anagram_list = suffix_algorithm(word, remainder, verbose, debug, level)
                 
-                if debug: print("Partial anagram list: %s" % partial_anagram_list)
+                if debug: print("%spartial anagram list: %s" % (indentation(level), partial_anagram_list))
                 
                 # Found any anagrams in the word and remainder?
                 if partial_anagram_list:
@@ -71,26 +73,35 @@ def prefix_algorithm(phrase, verbose=False, debug=False):
                     
                 # Add this word to the list of words already processed
                 prefix_word_list.append(word)
-                    
+                
+    #if debug: print(anagram_result_list)
+    
     return anagram_result_list
 
 
-def suffix_algorithm(word, remainder, verbose=False, debug=False):
-    """Look for anagrams in the remainder if the word is a anagram."""
+def suffix_algorithm(word, remainder, verbose=False, debug=False, level=0):
+    """Look for anagrams in the remainder if the specified word is a anagram."""
+
+    # Skip words that have already been checked and are not anagrams
+    if word in not_anagram_word_set: return None
+    
     if lookup(word):
         if remainder:
             # Apply the prefix algorithm to the remaining characters in the permutation
-            #partial_anagram_list = prefix_algorithm(remainder, verbose, debug)
+            #partial_anagram_list = prefix_algorithm(remainder, verbose, debug, level+1)
             partial_anagram_list = single_word_anagram(remainder, verbose, debug)
-            partial_anagram_list = [[partial_anagram] for partial_anagram in partial_anagram_list]
             
             # Did the recursion return anything?
             if partial_anagram_list:
-                # Prepend the word onto each list of anagrams found in the remainder
-                return [word + stringify(partial_anagram) for partial_anagram in partial_anagram_list]
+                # Prepend the word onto each anagrams found in the remainder
+                return ['%s %s' % (word, stringify(partial_anagram)) for partial_anagram in partial_anagram_list]
         else:
             return [word]
             
+    else:
+        # Remember that this word is not an anagram
+        not_anagram_word_set.add(word)
+        
     return None
 
 
@@ -101,20 +112,20 @@ def single_word_anagram(phrase, verbose=False, debug=False):
     
     for p in permutations(phrase):
         # Convert the list of permuted letters into a string
-        word = ''.join(p)
+        word = stringify(p)
         
         # Skip this word if it is the input word or has already been found
         if word == phrase or word in anagram_list:
-            if debug: print("Skipping word: %s" % word)
+            if debug: print("Skipped word: %s" % word)
             continue
             
-        if debug:
-            print("Candidate word: %s" % word)
+       
             
         if lookup(word):
+            if debug: print("Add new word: %s" % word)
             anagram_list.append(word)
             
-    if debug: print("anagram_list: %s" % anagram_list)
+    if debug: print("*** Returning anagram list: %s" % anagram_list)
     
     return anagram_list
 
@@ -130,8 +141,12 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--debug', action='store_true', help='enable debugging output')
     args = parser.parse_args()
     
-    phrase = ''.join(args.phrase).lower()
+    phrase = stringify(args.phrase).lower()
     if args.verbose: print("Entire phrase: %s" % phrase)
+    
+    # Randomize the original phrase (the anagram does not likely start with a prefix of the original phrase)
+    phrase = stringify(random.shuffle(list(phrase)))
+    if debug: print("Shuffled phrase: %s" % phrase)
     
     if args.word:
         anagram_list = single_word_anagram(phrase, args.verbose, args.debug)
