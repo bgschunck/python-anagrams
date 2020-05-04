@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Program for computing permutations of letters in words
 
 from itertools import permutations
