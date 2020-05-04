@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 #
 # Script to build a table for fast lookup of anagrams
-#
-# TODO: Make a class for the anagram table maker with the table as a member variable
-#
-# TODO: Add support for JSON format
 
 from nltk.corpus import words
 import yaml
