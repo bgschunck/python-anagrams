@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #
 # Script to build a table for fast lookup of anagrams
+#
+# TODO: Make a class for the anagram table maker with the table as a member variable
 
 from nltk.corpus import words
 import yaml
@@ -77,4 +79,4 @@ if __name__ == "__main__":
     make_anagram_table()
 
     # Save the anagram table
-    save_anagram_table("anagram.yaml")
+    save_anagram_table(anagram_dict, "anagram.yaml")
