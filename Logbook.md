@@ -3,10 +3,13 @@
 ## Tasks
 
 1. Continue work on anagram algorithms.
+2. Use dictionary with anagram key and list of anagrams already found by the program
 
 
 ## Notes
 
+The output of the anagram program was very long. May be re-evaluating the same anagrams repeatedly.
+If so, need to find out why. See task #2 above.
 
 
 ## Logbook
